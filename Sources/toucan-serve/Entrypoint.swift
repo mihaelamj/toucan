@@ -22,7 +22,7 @@ struct Entrypoint: AsyncParsableCommand {
             Toucan Serve Command
             """,
         discussion: """
-            Serves a directory over a local web-server.
+            Starts a local web server to serve a specified directory.
             """,
         version: GeneratorInfo.current.release.description
     )
@@ -31,7 +31,7 @@ struct Entrypoint: AsyncParsableCommand {
     var root: String = "./dist"
 
     @Option(name: .shortAndLong)
-    var hostname: String = "127.0.0.1"
+    var address: String = "0.0.0.0"
 
     @Option(name: .shortAndLong)
     var port: Int = 3000
@@ -59,7 +59,7 @@ struct Entrypoint: AsyncParsableCommand {
         let app = Application(
             router: router,
             configuration: .init(
-                address: .hostname(hostname, port: port),
+                address: .hostname(address, port: port),
                 serverName: "toucan-server"
             ),
             logger: logger

@@ -19,6 +19,7 @@ extension Array {
 /// The main entry point for the command-line tool.
 @main
 struct Entrypoint: AsyncParsableCommand {
+
     /// Configuration for the command-line tool.
     static let configuration = CommandConfiguration(
         commandName: "toucan",
@@ -28,7 +29,8 @@ struct Entrypoint: AsyncParsableCommand {
         discussion: """
             A markdown-based Static Site Generator (SSG) written in Swift.
             """,
-        version: GeneratorInfo.current.version
+        version: GeneratorInfo.current.version,
+        helpNames: []
     )
 
     @Argument(parsing: .allUnrecognized)
@@ -42,14 +44,25 @@ struct Entrypoint: AsyncParsableCommand {
             let path = args.popFirst(),
             let subcommand = args.popFirst()
         else {
-            fatalError("argument error")
+            fatalError(
+                "Missing arguments, at least one subcommand is required."
+            )
         }
 
         let base = URL(fileURLWithPath: path).lastPathComponent
         let toucanCmd = base + "-" + subcommand
 
+        if subcommand.isEmpty || subcommand == "--help" || subcommand == "-h" {
+            displayHelp()
+            return
+        }
+        if subcommand == "--version" {
+            displayVersion()
+            return
+        }
+
         guard let exe = Command.findInPath(withName: toucanCmd) else {
-            fatalError("Command not found (\(toucanCmd)).")
+            fatalError("Subcommand not found: `\(toucanCmd)`.")
         }
         let cmd =
             exe
@@ -75,4 +88,32 @@ struct Entrypoint: AsyncParsableCommand {
 
         try subprocess.wait()
     }
+
+    private func displayVersion() {
+        print(Self.configuration.version)
+    }
+
+    private func displayHelp() {
+        print(
+            """
+            OVERVIEW: \(Self.configuration.abstract)
+
+            \(Self.configuration.discussion)
+
+            USAGE:
+            toucan <subcommand>
+
+            SUBCOMMANDS:
+            init            Initializes a new Toucan project
+            generate        Build static files using configured targets
+            watch           Watch for changes and auto-regenerate output
+            serve           Start a local web server to preview the site
+
+            OPTIONS:
+            --version       Show the version.
+            -h, --help      Show help information.
+            """
+        )
+    }
+
 }
